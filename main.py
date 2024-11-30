@@ -50,50 +50,36 @@ def delete_hotel(hotel_id: int):
 
 
 @app.put("/hotels/{hotel_id}")
-def edit_hotel_put(
+def edit_hotel(
     hotel_id: int,
-    title: str = Query(description='Заголовок отеля'),
-    name: str = Query(description='Название отеля')
+    title: str = Body(),
+    name: str = Body()
 ):
     global hotels
-    hotels_ = []
-    for h in hotels:
-        if h['id'] == hotel_id:
-            hotels_.append(
-                {
-                    'id': hotel_id,
-                    'title': title,
-                    'name': name
-                }
-            )
-        else:
-            hotels_.append(h)
-    hotels = hotels_
+    hotel = [h for h in hotels if h['id'] == hotel_id][0]
+    hotel['title'] = title
+    hotel['name'] = name
     return {
         'status': 'OK'
     }
 
 
-@app.patch("/hotels/{hotel_id}")
-def edit_hotel_patch(
+@app.patch(
+    "/hotels/{hotel_id}",
+    summary='Частичное обновления данных об отеле',
+    description='<h1>Подробное описание</h1>'
+)
+def partially_edit_hotel(
     hotel_id: int,
-    title: str | None = Query(None, description="Заголовок отеля"),
-    name: str | None = Query(None, description="Название отеля")
+    title: str | None = Body(None),
+    name: str | None = Body(None)
 ):
     global hotels
-    hotels_ = []
-    for h in hotels:
-        if h['id'] == hotel_id:
-            hotels_.append(
-                {
-                    'id': hotel_id,
-                    'title': title if title else h['title'],
-                    'name': name if name else h['name']
-                }
-            )
-        else:
-            hotels_.append(h)
-    hotels = hotels_
+    hotel = [h for h in hotels if h['id'] == hotel_id][0]
+    if title:
+        hotel['title'] = title
+    if name:
+        hotel['name'] = name
     return {
         'status': 'OK'
     }
