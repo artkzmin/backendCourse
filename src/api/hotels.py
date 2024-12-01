@@ -45,7 +45,7 @@ async def create_hotel(
     })
 ):
     async with async_session_maker() as session:
-        hotel = await HotelsRepository(session).add(**hotel_data.model_dump())
+        hotel = await HotelsRepository(session).add(hotel_data)
 
         # add_hotel_stmt = insert(HotelsOrm).values(**hotel_data.model_dump())
         # Для дебага запроса:
