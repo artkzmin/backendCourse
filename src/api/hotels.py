@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query, Body, HTTPException, status
+from fastapi import APIRouter, Query, Body, status, HTTPException
 from src.schemas.hotels import Hotel, HotelPATCH
 from src.api.dependencies import PaginationDep
 from src.database import async_session_maker
@@ -20,6 +20,19 @@ async def get_hotels(
             title=title,
             limit=per_page,
             offset=per_page * (pagination.page - 1)
+        )
+    
+
+
+@router.get('/{hotel_id}')
+async def get_hotel(hotel_id: int):
+    async with async_session_maker() as session:
+        result = await HotelsRepository(session).get_one_or_none(id=hotel_id)
+        if result:
+            return result
+        
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND
         )
 
 
@@ -84,16 +97,13 @@ async def edit_hotel(
     summary='Частичное обновления данных об отеле',
     description='<h1>Подробное описание</h1>'
 )
-def partially_edit_hotel(
+async def partially_edit_hotel(
     hotel_id: int,
     hotel_data: HotelPATCH
 ):
-    global hotels
-    hotel = [h for h in hotels if h['id'] == hotel_id][0]
-    if hotel_data.title:
-        hotel['title'] = hotel_data.title
-    if hotel_data.name:
-        hotel['name'] = hotel_data.name
+    async with async_session_maker() as session:
+        await HotelsRepository(session).edit(data=hotel_data, exclude_unset=True, id=hotel_id)
+        await session.commit()
     return {
         'status': 'OK'
     }
