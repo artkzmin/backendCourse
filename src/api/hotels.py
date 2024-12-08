@@ -1,36 +1,39 @@
 from fastapi import APIRouter, Query, Body
-from src.schemas.hotels import Hotel, HotelPATCH, HotelAdd
-from src.api.dependencies import PaginationDep
-from src.database import async_session_maker
-from src.repositories.hotels import HotelsRepository
+from src.schemas.hotels import HotelPATCH, HotelAdd, Hotel
+from src.api.dependencies import PaginationDep, DBDep
+from src.schemas.base import StatusOK
+
 
 router = APIRouter(prefix='/hotels', tags=['Отели'])
 
 
 @router.get("")
 async def get_hotels(
-        pagination: PaginationDep,
-        title: str | None = Query(None, description="Заголовок отеля"),
-        location: str | None = Query(None, description="Местоположение отеля")
-):
+    db: DBDep,
+    pagination: PaginationDep,
+    title: str | None = Query(None, description="Заголовок отеля"),
+    location: str | None = Query(None, description="Местоположение отеля")
+) -> list[Hotel]:
     per_page = pagination.per_page or 5
-    async with async_session_maker() as session:
-        return await HotelsRepository(session).get_all(
-            location=location,
-            title=title,
-            limit=per_page,
-            offset=per_page * (pagination.page - 1)
-        )
+    return await db.hotels.get_all(
+        location=location,
+        title=title,
+        limit=per_page,
+        offset=per_page * (pagination.page - 1)
+    )
 
 
 @router.get('/{hotel_id}')
-async def get_hotel(hotel_id: int):
-    async with async_session_maker() as session:
-        return await HotelsRepository(session).get_one_or_none(id=hotel_id)
+async def get_hotel(
+    db: DBDep,
+    hotel_id: int
+) -> Hotel | None:
+    return await db.hotels.get_one_or_none(id=hotel_id)
 
 
 @router.post('')
 async def create_hotel(
+    db: DBDep,
     hotel_data: HotelAdd = Body(openapi_examples={
         '1': {
             'summary': 'Сочи',
@@ -48,41 +51,35 @@ async def create_hotel(
         }
     })
 ):
-    async with async_session_maker() as session:
-        hotel = await HotelsRepository(session).add(hotel_data)
+    hotel = await db.hotels.add(hotel_data)
 
-        # add_hotel_stmt = insert(HotelsOrm).values(**hotel_data.model_dump())
-        # Для дебага запроса:
-        # from src.database import engine
-        # print(add_hotel_stmt.compile(engine, compile_kwargs={'literal_binds': True}))
-        # await session.execute(add_hotel_stmt)
+    # add_hotel_stmt = insert(HotelsOrm).values(**hotel_data.model_dump())
+    # Для дебага запроса:
+    # from src.database import engine
+    # print(add_hotel_stmt.compile(engine, compile_kwargs={'literal_binds': True}))
+    # await session.execute(add_hotel_stmt)
 
-        await session.commit()
+    await db.commit()
 
     return {'status': 'OK', 'data': hotel}
 
 
 @router.delete('/{hotel_id}')
-async def delete_hotel(hotel_id: int):
-    async with async_session_maker() as session:
-        await HotelsRepository(session).delete(id=hotel_id)
-        await session.commit()
-    return {
-        'status': 'OK'
-    }
+async def delete_hotel(db: DBDep, hotel_id: int) -> StatusOK:
+    await db.hotels.delete(id=hotel_id)
+    await db.commit()
+    return StatusOK
 
 
 @router.put("/{hotel_id}")
 async def edit_hotel(
+    db: DBDep,
     hotel_id: int,
     hotel_data: HotelAdd
-):
-    async with async_session_maker() as session:
-        await HotelsRepository(session).edit(data=hotel_data, id=hotel_id)
-        await session.commit()
-    return {
-        'status': 'OK'
-    }
+) -> StatusOK:
+    await db.hotels.edit(data=hotel_data, id=hotel_id)
+    await db.commit()
+    return StatusOK
 
 
 @router.patch(
@@ -91,12 +88,10 @@ async def edit_hotel(
     description='<h1>Подробное описание</h1>'
 )
 async def partially_edit_hotel(
+    db: DBDep,
     hotel_id: int,
     hotel_data: HotelPATCH
-):
-    async with async_session_maker() as session:
-        await HotelsRepository(session).edit(data=hotel_data, exclude_unset=True, id=hotel_id)
-        await session.commit()
-    return {
-        'status': 'OK'
-    }
+) -> StatusOK:
+    await db.hotels.edit(data=hotel_data, exclude_unset=True, id=hotel_id)
+    await db.commit()
+    return StatusOK
