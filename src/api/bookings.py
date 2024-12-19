@@ -9,6 +9,21 @@ router = APIRouter(
 )
 
 
+@router.get('')
+async def get_bookings(
+    db: DBDep
+) -> list[Booking]:
+    return await db.bookings.get_all()
+
+
+@router.get('/me')
+async def get_me_bookings(
+    db: DBDep,
+    user_id: UserIdDep
+) -> list[Booking]:
+    return await db.bookings.get_filtered(user_id=user_id)
+
+
 @router.post('')
 async def create_booking(
     user_id: UserIdDep,
@@ -28,18 +43,3 @@ async def create_booking(
         'status': 'OK',
         'data': booking_data
     }
-
-
-@router.get('/me')
-async def get_me_bookings(
-    db: DBDep,
-    user_id: UserIdDep
-) -> list[Booking]:
-    return await db.bookings.get_filtered(user_id=user_id)
-
-
-@router.get('')
-async def get_bookings(
-    db: DBDep
-) -> list[Booking]:
-    return await db.bookings.get_all()

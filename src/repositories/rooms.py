@@ -1,68 +1,34 @@
-from sqlalchemy import select, func
-
 from src.repositories.base import BaseRepository
 from src.models.rooms import RoomsOrm
 from src.schemas.rooms import Room
+from src.repositories.utils import rooms_ids_for_booking
 
 
 class RoomsRepository(BaseRepository):
     model = RoomsOrm
     schema = Room
 
-    async def get_all(
+    async def get_filtered_by_time(
         self,
         limit,
         offset,
-        title,
-        description,
-        price_ge,
-        price_le,
-        quantity,
-        hotel_id
+        hotel_id,
+        date_from,
+        date_to
+
+
     ) -> list[Room]:
-        query = select(
-            self.model
+
+        rooms_ids_to_get = rooms_ids_for_booking(
+            date_from=date_from,
+            date_to=date_to,
+            hotel_id=hotel_id
         )
 
-        if title:
-            query = (
-                query
-                .filter(func.lower(self.model.title).contains(title.strip().lower()))
-            )
-        if description:
-            query = (
-                query
-                .filter(func.lower(self.model.description).contains(description.strip().lower()))
-            )
-        if price_ge:
-            query = (
-                query
-                .filter(self.model.price >= price_ge)
-            )
-        if price_le:
-            query = (
-                query
-                .filter(self.model.price <= price_le)
-            )
-        if hotel_id:
-            query = (
-                query
-                .filter_by(hotel_id=hotel_id)
-            )
-        if quantity:
-            query = (
-                query
-                .filter_by(quantity=quantity)
-            )
-
-        query = (
-            query
+        rooms_ids_to_get = (
+            rooms_ids_to_get
             .limit(limit)
             .offset(offset)
         )
 
-        rooms = await self.session.execute(query)
-
-        return [
-            self.schema.model_validate(model) for model in rooms.scalars().all()
-        ]
+        return await self.get_filtered(RoomsOrm.id.in_(rooms_ids_to_get))

@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Query, Body
+from datetime import date
 from src.api.dependencies import PaginationDep, DBDep
 from src.schemas.rooms import Room, RoomAddRequest, RoomPatchRequest, RoomAdd, RoomPatch
-from src.repositories.rooms import RoomsRepository
-from src.database import async_session_maker
 from src.schemas.base import StatusOK
 
 router = APIRouter(
@@ -16,24 +15,28 @@ async def get_rooms(
     db: DBDep,
     hotel_id: int,
     pagination: PaginationDep,
-    title: str | None = Query(None, description='Название номера'),
-    description: str | None = Query(None, description='Описание номера'),
-    price_ge: int | None = Query(
-        None, description='Цена больше или равна чем', ge=0),
-    price_le: int | None = Query(
-        None, description='Цена меньше или равна чем', ge=0),
-    quantity: int | None = Query(None, description='Количество номеров', ge=0),
+    date_from: date = Query(example='2024-08-01'),
+    date_to: date = Query(example='2024-08-20')
+    # title: str | None = Query(None, description='Название номера'),
+    # description: str | None = Query(None, description='Описание номера'),
+    # price_ge: int | None = Query(
+    #     None, description='Цена больше или равна чем', ge=0),
+    # price_le: int | None = Query(
+    #     None, description='Цена меньше или равна чем', ge=0),
+    # quantity: int | None = Query(None, description='Количество номеров', ge=0),
 ) -> list[Room]:
     per_page = pagination.per_page or 5
-    rooms = await db.rooms.get_all(
+    rooms = await db.rooms.get_filtered_by_time(
         limit=per_page,
         offset=per_page * (pagination.page - 1),
-        title=title,
-        description=description,
-        price_ge=price_ge,
-        price_le=price_le,
-        quantity=quantity,
-        hotel_id=hotel_id
+        # title=title,
+        # description=description,
+        # price_ge=price_ge,
+        # price_le=price_le,
+        # quantity=quantity,
+        hotel_id=hotel_id,
+        date_from=date_from,
+        date_to=date_to
     )
     return rooms
 
@@ -42,7 +45,28 @@ async def get_rooms(
 async def create_room(
     db: DBDep,
     hotel_id: int,
-    room_data: RoomAddRequest = Body()
+    room_data: RoomAddRequest = Body(
+        openapi_examples={
+            '1': {
+                'summary': 'Люкс',
+                'value': {
+                    'title': 'Люкс',
+                    'description': 'Дорогой люкс',
+                    'price': 1000,
+                    'quantity': 3
+                }
+            },
+            '2': {
+                'summary': 'Обычный',
+                'value': {
+                    'title': 'Обычный',
+                    'description': 'Обычный номер',
+                    'price': 100,
+                    'quantity': 3
+                }
+            }
+        }
+    )
 ):
     _room_data = RoomAdd(hotel_id=hotel_id, **room_data.model_dump())
     room_data = await db.rooms.add(data=_room_data)
