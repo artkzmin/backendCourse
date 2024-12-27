@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import ForeignKey
-from src.database import Base
+from src.database import BaseOrm
 
 
-class RoomsOrm(Base):
+class RoomsOrm(BaseOrm):
     __tablename__ = 'rooms'
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -12,4 +12,3 @@ class RoomsOrm(Base):
     description: Mapped[str | None]
     price: Mapped[int]
     quantity: Mapped[int]
-    

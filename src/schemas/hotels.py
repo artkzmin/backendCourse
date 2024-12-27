@@ -12,6 +12,6 @@ class Hotel(HotelAdd):
     model_config = ConfigDict(from_attributes=True)
 
 
-class HotelPATCH(BaseModel):
+class HotelPatch(BaseModel):
     title: str | None = None
     location: str | None = None

@@ -1,11 +1,11 @@
-from src.database import Base
+from src.database import BaseOrm
 from datetime import date
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped
 from sqlalchemy.ext.hybrid import hybrid_property
 
 
-class BookingsOrm(Base):
+class BookingsOrm(BaseOrm):
     __tablename__ = 'bookings'
     id: Mapped[int] = mapped_column(primary_key=True)
     room_id: Mapped[int] = mapped_column(

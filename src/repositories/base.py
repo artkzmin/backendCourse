@@ -1,9 +1,10 @@
 from sqlalchemy import select, insert, delete, update
 from pydantic import BaseModel
+from src.database import BaseOrm
 
 
 class BaseRepository:
-    model = None
+    model: BaseOrm = None
     schema: BaseModel = None
 
     def __init__(self, session) -> None:

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Query, Body
 from datetime import date
-from src.schemas.hotels import HotelPATCH, HotelAdd, Hotel
+from src.schemas.hotels import HotelPatch, HotelAdd, Hotel
 from src.api.dependencies import PaginationDep, DBDep
 from src.schemas.base import StatusOK
 
@@ -97,7 +97,7 @@ async def edit_hotel(
 async def partially_edit_hotel(
     db: DBDep,
     hotel_id: int,
-    hotel_data: HotelPATCH
+    hotel_data: HotelPatch
 ) -> StatusOK:
     await db.hotels.edit(data=hotel_data, exclude_unset=True, id=hotel_id)
     await db.commit()
