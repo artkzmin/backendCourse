@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Query, Body
 from datetime import date
 from src.api.dependencies import PaginationDep, DBDep
-from src.schemas.rooms import Room, RoomAddRequest, RoomPatchRequest, RoomAdd, RoomPatch, Facilities
+from src.schemas.rooms import Room, RoomAddRequest, RoomPatchRequest, RoomAdd, RoomPatch
 from src.schemas.base import StatusOK
 from src.schemas.facilities import RoomFacilityAdd
 
@@ -25,7 +25,7 @@ async def get_rooms(
     # price_le: int | None = Query(
     #     None, description='Цена меньше или равна чем', ge=0),
     # quantity: int | None = Query(None, description='Количество номеров', ge=0),
-) -> list[Room]:
+):
     per_page = pagination.per_page or 5
     rooms = await db.rooms.get_filtered_by_time(
         limit=per_page,
@@ -91,7 +91,7 @@ async def get_room(
     db: DBDep,
     hotel_id: int,
     room_id: int
-) -> Room | None:
+):
     room = await db.rooms.get_one_or_none(id=room_id, hotel_id=hotel_id)
     return room
 
@@ -107,24 +107,6 @@ async def delete_room(
     return StatusOK
 
 
-# async def edit_balk(self, data: list[BaseModel], **filter_by) -> None:
-#         old_data_set = set(await self.get_filtered(**filter_by))
-#         new_data_set = set(data)
-#         to_add_data = new_data_set - old_data_set
-#         to_delete_data = old_data_set - new_data_set
-#         insert_stmt = (
-#             insert(self.model)
-#             .values(
-#                 [item.model_dump for item in to_add_data]
-#             )
-#         )
-#         await self.session.execute(insert_stmt)
-#         delete_stmt = (
-#             delete(self.model)
-#             .filter_by
-#         )
-
-
 @router.put('/{hotel_id}/rooms/{room_id}')
 async def edit_room(
     db: DBDep,
@@ -136,7 +118,7 @@ async def edit_room(
                          **room_data.model_dump())
     await db.rooms.edit(data=_room_data, id=room_id, hotel_id=hotel_id)
 
-    await db.rooms_facilities.edit_balk(room_id=room_id, facilities_ids=room_data.facilities_ids)
+    await db.rooms_facilities.set_room_facilities(room_id=room_id, facilities_ids=room_data.facilities_ids)
 
     await db.commit()
     return StatusOK
@@ -147,16 +129,16 @@ async def partially_edit_room(
     db: DBDep,
     hotel_id: int,
     room_id: int,
-    room_data: RoomPatchRequest,
-    facilities: Facilities
-
+    room_data: RoomPatchRequest
 ) -> StatusOK:
+    _room_data_dict = room_data.model_dump(exclude_unset=True)
     _room_data = RoomPatch(
-        hotel_id=hotel_id, id=room_id, **room_data.model_dump(exclude_unset=True)
+        hotel_id=hotel_id, id=room_id, **_room_data_dict
     )
     await db.rooms.edit(data=_room_data, exclude_unset=True, id=room_id, hotel_id=hotel_id)
 
-    if facilities.ids:
-        await db.rooms_facilities.edit_balk(room_id=room_id, facilities_ids=facilities.ids)
+    if 'facilities_ids' in _room_data_dict:
+        await db.rooms_facilities.set_room_facilities(room_id=room_id, facilities_ids=_room_data_dict['facilities_ids'])
+
     await db.commit()
     return StatusOK
