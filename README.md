@@ -14,3 +14,12 @@ celery -A src.tasks.celery_app:celery_instance worker -l INFO --pool=solo
 ```
 celery -A src.tasks.celery_app:celery_instance beat -l INFO
 ```
+
+### Запуск тестирования
+```
+pytest -v
+```
+Запуск тестирования с поддержкой дебага
+```
+pytest -v -s
+```

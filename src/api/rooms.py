@@ -5,19 +5,16 @@ from src.schemas.rooms import Room, RoomAddRequest, RoomPatchRequest, RoomAdd, R
 from src.schemas.base import StatusOK
 from src.schemas.facilities import RoomFacilityAdd
 
-router = APIRouter(
-    prefix='/hotels',
-    tags=['Номера']
-)
+router = APIRouter(prefix="/hotels", tags=["Номера"])
 
 
-@router.get('/{hotel_id}/rooms')
+@router.get("/{hotel_id}/rooms")
 async def get_rooms(
     db: DBDep,
     hotel_id: int,
     pagination: PaginationDep,
-    date_from: date = Query(example='2024-08-01'),
-    date_to: date = Query(example='2024-08-20')
+    date_from: date = Query(examples=["2024-08-01"]),
+    date_to: date = Query(examples=["2024-08-20"]),
     # title: str | None = Query(None, description='Название номера'),
     # description: str | None = Query(None, description='Описание номера'),
     # price_ge: int | None = Query(
@@ -37,108 +34,97 @@ async def get_rooms(
         # quantity=quantity,
         hotel_id=hotel_id,
         date_from=date_from,
-        date_to=date_to
+        date_to=date_to,
     )
     return rooms
 
 
-@router.post('/{hotel_id}/rooms')
+@router.post("/{hotel_id}/rooms")
 async def create_room(
     db: DBDep,
     hotel_id: int,
     room_data: RoomAddRequest = Body(
         openapi_examples={
-            '1': {
-                'summary': 'Люкс',
-                'value': {
-                    'title': 'Люкс',
-                    'description': 'Дорогой люкс',
-                    'price': 1000,
-                    'quantity': 3,
-                    'facilities_ids': []
-                }
+            "1": {
+                "summary": "Люкс",
+                "value": {
+                    "title": "Люкс",
+                    "description": "Дорогой люкс",
+                    "price": 1000,
+                    "quantity": 3,
+                    "facilities_ids": [],
+                },
             },
-            '2': {
-                'summary': 'Обычный',
-                'value': {
-                    'title': 'Обычный',
-                    'description': 'Обычный номер',
-                    'price': 100,
-                    'quantity': 3,
-                    'facilities_ids': []
-                }
-            }
+            "2": {
+                "summary": "Обычный",
+                "value": {
+                    "title": "Обычный",
+                    "description": "Обычный номер",
+                    "price": 100,
+                    "quantity": 3,
+                    "facilities_ids": [],
+                },
+            },
         }
-    )
+    ),
 ):
     _room_data = RoomAdd(hotel_id=hotel_id, **room_data.model_dump())
 
     room = await db.rooms.add(data=_room_data)
 
-    rooms_facilites_data = [RoomFacilityAdd(room_id=room.id, facility_id=facility_id)
-                            for facility_id in room_data.facilities_ids]
-    await db.rooms_facilities.add_bulk(rooms_facilites_data)
+    if room_data.facilities_ids:
+        rooms_facilites_data = [
+            RoomFacilityAdd(room_id=room.id, facility_id=facility_id)
+            for facility_id in room_data.facilities_ids
+        ]
+        await db.rooms_facilities.add_bulk(rooms_facilites_data)
 
     await db.commit()
-    return {
-        'status': 'OK',
-        'data': room
-    }
+    return {"status": "OK", "data": room}
 
 
-@router.get('/{hotel_id}/rooms/{room_id}')
-async def get_room(
-    db: DBDep,
-    hotel_id: int,
-    room_id: int
-):
+@router.get("/{hotel_id}/rooms/{room_id}")
+async def get_room(db: DBDep, hotel_id: int, room_id: int):
     room = await db.rooms.get_one_or_none_with_rels(id=room_id, hotel_id=hotel_id)
     return room
 
 
-@router.delete('/{hotel_id}/rooms/{room_id}')
-async def delete_room(
-    db: DBDep,
-    hotel_id: int,
-    room_id: int
-) -> StatusOK:
+@router.delete("/{hotel_id}/rooms/{room_id}")
+async def delete_room(db: DBDep, hotel_id: int, room_id: int) -> StatusOK:
     await db.rooms.delete(id=room_id, hotel_id=hotel_id)
     await db.commit()
     return StatusOK
 
 
-@router.put('/{hotel_id}/rooms/{room_id}')
+@router.put("/{hotel_id}/rooms/{room_id}")
 async def edit_room(
-    db: DBDep,
-    hotel_id: int,
-    room_id: int,
-    room_data: RoomAddRequest
+    db: DBDep, hotel_id: int, room_id: int, room_data: RoomAddRequest
 ) -> StatusOK:
-    _room_data = RoomAdd(hotel_id=hotel_id, room_id=room_id,
-                         **room_data.model_dump())
+    _room_data = RoomAdd(hotel_id=hotel_id, room_id=room_id, **room_data.model_dump())
     await db.rooms.edit(data=_room_data, id=room_id, hotel_id=hotel_id)
 
-    await db.rooms_facilities.set_room_facilities(room_id=room_id, facilities_ids=room_data.facilities_ids)
+    await db.rooms_facilities.set_room_facilities(
+        room_id=room_id, facilities_ids=room_data.facilities_ids
+    )
 
     await db.commit()
     return StatusOK
 
 
-@ router.patch('/{hotel_id}/rooms/{room_id}')
+@router.patch("/{hotel_id}/rooms/{room_id}")
 async def partially_edit_room(
-    db: DBDep,
-    hotel_id: int,
-    room_id: int,
-    room_data: RoomPatchRequest
+    db: DBDep, hotel_id: int, room_id: int, room_data: RoomPatchRequest
 ) -> StatusOK:
     _room_data_dict = room_data.model_dump(exclude_unset=True)
-    _room_data = RoomPatch(
-        hotel_id=hotel_id, id=room_id, **_room_data_dict
+    _room_data = RoomPatch(hotel_id=hotel_id, id=room_id, **_room_data_dict)
+    await db.rooms.edit(
+        data=_room_data, exclude_unset=True, id=room_id, hotel_id=hotel_id
     )
-    await db.rooms.edit(data=_room_data, exclude_unset=True, id=room_id, hotel_id=hotel_id)
 
-    if 'facilities_ids' in _room_data_dict:
-        await db.rooms_facilities.set_room_facilities(room_id=room_id, facilities_ids=_room_data_dict['facilities_ids'])
+    if "facilities_ids" in _room_data_dict:
+        await db.rooms_facilities.set_room_facilities(
+            room_id=room_id, facilities_ids=_room_data_dict["facilities_ids"]
+        )
 
     await db.commit()
     return StatusOK
