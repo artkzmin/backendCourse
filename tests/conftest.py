@@ -1,9 +1,14 @@
 from dotenv import load_dotenv
-import json
-
-from src.schemas.rooms import RoomAddRequest
 
 load_dotenv(".test.env", override=True)
+
+import json
+
+from src.schemas.rooms import RoomAdd
+from src.schemas.hotels import HotelAdd
+from src.utils.db_manager import DBManager
+from src.database import async_session_maker_null_pool
+
 
 from src.main import app
 from httpx import AsyncClient
@@ -43,22 +48,19 @@ async def test_login(test_root):
 
 @pytest.fixture(scope="session", autouse=True)
 async def create_hotels(test_login):
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        with open("tests/mock_hotels.json") as f:
-            hotels = json.load(f)
-            for h in hotels:
-                print(h)
-                await ac.post("/hotels", json=h)
+    with open("tests/mock_hotels.json", encoding="utf-8") as f:
+        hotels = json.load(f)
+    hotels = [HotelAdd.model_validate(h) for h in hotels]
+    async with DBManager(session_factory=async_session_maker_null_pool) as db:
+        await db.hotels.add_bulk(hotels)
+        await db.commit()
 
 
 @pytest.fixture(scope="session", autouse=True)
 async def create_rooms(create_hotels):
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        with open("tests/mock_rooms.json") as f:
-            rooms = json.load(f)
-            for r in rooms:
-                r_add = RoomAddRequest(**r)
-                url = f"/hotels/{r['hotel_id']}/rooms"
-                print(url, r_add.model_dump())
-                res = await ac.post(url, json=r_add.model_dump())
-                print(res)
+    with open("tests/mock_rooms.json", encoding="utf-8") as f:
+        rooms = json.load(f)
+    rooms = [RoomAdd.model_validate(r) for r in rooms]
+    async with DBManager(session_factory=async_session_maker_null_pool) as db:
+        await db.rooms.add_bulk(rooms)
+        await db.commit()
