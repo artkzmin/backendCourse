@@ -17,6 +17,7 @@ import pytest
 from src.config import settings
 from src.database import BaseOrm, engine_null_pool
 from src.models import *
+from src.api.dependencies import get_db
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -24,14 +25,25 @@ async def check_test_mode():
     assert settings.MODE == "TEST"
 
 
-@pytest.fixture(scope="function", autouse=True)
-async def db() -> DBManager:
+async def get_db_null_pool() -> DBManager:
     async with DBManager(async_session_maker_null_pool) as db:
         yield db
 
 
+@pytest.fixture(scope="function", autouse=True)
+async def db() -> DBManager:
+    async for db in get_db_null_pool():
+        yield db
+
+
+app.dependency_overrides[get_db] = get_db_null_pool
+
+
 @pytest.fixture(scope="session")
 async def ac() -> AsyncClient:
+    # async with app.router.lifespan_context(
+    #     app
+    # ):  # управляет жизненным циклом FastAPI, строка для работы кэша
     async with AsyncClient(app=app, base_url="http://test") as ac:
         yield ac
 
