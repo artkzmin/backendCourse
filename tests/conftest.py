@@ -2,7 +2,27 @@ from dotenv import load_dotenv
 
 load_dotenv(".test.env", override=True)
 
+from unittest import mock
+
+
+# мок кэша без лямбды
+# def empty_cache(*args, **kwargs):
+#     def wrapper(func):
+#         return func
+
+#     return wrapper
+
+
+# mock.patch("fastapi_cache.decorator.cache", empty_cache).start()
+
+# мок кэша с лямбдой
+mock.patch("fastapi_cache.decorator.cache", lambda *args, **kwargs: lambda f: f).start()
+
 import json
+import pytest
+from httpx import AsyncClient
+from unittest import mock
+
 
 from src.schemas.rooms import RoomAdd
 from src.schemas.hotels import HotelAdd
@@ -11,9 +31,6 @@ from src.database import async_session_maker_null_pool
 
 
 from src.main import app
-from httpx import AsyncClient
-
-import pytest
 from src.config import settings
 from src.database import BaseOrm, engine_null_pool
 from src.models import *
@@ -58,7 +75,22 @@ async def setup_database(check_test_mode):
 
 @pytest.fixture(scope="session", autouse=True)
 async def register_user(ac, setup_database):
-    await ac.post("/auth/register", json={"email": "test@test.com", "password": "1234"})
+    with open("tests/mock_user.json", encoding="utf-8") as f:
+        user = json.load(f)
+        print(user)
+    await ac.post("/auth/register", json=user)
+
+
+@pytest.fixture(scope="session")
+async def authenticated_ac(ac, register_user) -> AsyncClient:
+    with open("tests/mock_user.json", encoding="utf-8") as f:
+        user = json.load(f)
+    response = await ac.post("/auth/login", json=user)
+    assert response.status_code == 200
+    assert ac.cookies["access_token"]
+    assert isinstance(ac.cookies["access_token"], str)
+    # print(f'ACCESS_TOKEN={ac.cookies["access_token"]}')
+    yield ac
 
 
 # @pytest.fixture(scope="session", autouse=True)

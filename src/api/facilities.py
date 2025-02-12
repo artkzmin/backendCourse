@@ -25,13 +25,13 @@ router = APIRouter(prefix="/facilities", tags=["Удобства"])
 #         return facilities_dicts
 
 
-@router.get("/")
-# @cache(expire=10)
+@router.get("")
+@cache(expire=10)
 async def get_facilities(db: DBDep):
     return await db.facilities.get_all()
 
 
-@router.post("/")
+@router.post("")
 async def create_facilities(db: DBDep, facility: FacilityAdd = Body()):
     facility = await db.facilities.add(facility)
     await db.commit()
