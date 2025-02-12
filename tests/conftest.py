@@ -24,6 +24,18 @@ async def check_test_mode():
     assert settings.MODE == "TEST"
 
 
+@pytest.fixture(scope="function", autouse=True)
+async def db() -> DBManager:
+    async with DBManager(async_session_maker_null_pool) as db:
+        yield db
+
+
+@pytest.fixture(scope="session")
+async def ac() -> AsyncClient:
+    async with AsyncClient(app=app, base_url="http://test") as ac:
+        yield ac
+
+
 @pytest.fixture(scope="session", autouse=True)
 async def setup_database(check_test_mode):
     print("Я ФИКСТУРА")
@@ -33,21 +45,18 @@ async def setup_database(check_test_mode):
 
 
 @pytest.fixture(scope="session", autouse=True)
-async def test_root(setup_database):
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        await ac.post(
-            "/auth/register", json={"email": "test@test.com", "password": "1234"}
-        )
+async def register_user(ac, setup_database):
+    await ac.post("/auth/register", json={"email": "test@test.com", "password": "1234"})
+
+
+# @pytest.fixture(scope="session", autouse=True)
+# async def test_login(test_root):
+#     async with AsyncClient(app=app, base_url="http://test") as ac:
+#         await ac.post("/login", json={"email": "test@test.com", "password": "1234"})
 
 
 @pytest.fixture(scope="session", autouse=True)
-async def test_login(test_root):
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        await ac.post("/login", json={"email": "test@test.com", "password": "1234"})
-
-
-@pytest.fixture(scope="session", autouse=True)
-async def create_hotels(test_login):
+async def create_hotels(setup_database):
     with open("tests/mock_hotels.json", encoding="utf-8") as f:
         hotels = json.load(f)
     hotels = [HotelAdd.model_validate(h) for h in hotels]
