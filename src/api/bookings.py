@@ -25,8 +25,12 @@ async def create_booking(
     _booking_data = BookingAdd(
         user_id=user_id, price=price, **booking_data.model_dump()
     )
+    room = await db.rooms.get_one_or_none(id=booking_data.room_id)
+    hotel = await db.hotels.get_one_or_none(id=room.hotel_id)
     try:
-        booking_data = await db.bookings.add_booking(data=_booking_data)
+        booking_data = await db.bookings.add_booking(
+            data=_booking_data, hotel_id=hotel.id
+        )
         await db.commit()
         return {"status": "OK", "data": booking_data}
     except Exception:

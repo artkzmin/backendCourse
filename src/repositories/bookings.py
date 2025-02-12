@@ -20,10 +20,10 @@ class BookingsRepository(BaseRepository):
             self.mapper.map_to_domain_entity(booking) for booking in res.scalars().all()
         ]
 
-    async def add_booking(self, data: BookingAdd):
-        query_hotel_id = select(RoomsOrm.hotel_id).filter_by(id=data.room_id)
-        res_hotel_id = await self.session.execute(query_hotel_id)
-        hotel_id = res_hotel_id.scalars().one()
+    async def add_booking(self, data: BookingAdd, hotel_id: int):
+        # query_hotel_id = select(RoomsOrm.hotel_id).filter_by(id=data.room_id)
+        # res_hotel_id = await self.session.execute(query_hotel_id)
+        # hotel_id = res_hotel_id.scalars().one()
         query = rooms_ids_for_booking(
             date_from=data.date_from, date_to=data.date_to, hotel_id=hotel_id
         )
