@@ -5,6 +5,8 @@ from src.repositories.base import BaseRepository
 from src.schemas.bookings import Booking, BookingAdd
 from src.models.bookings import BookingsOrm
 from src.repositories.mappers.mappers import BookingDataMapper
+from src.repositories.utils import rooms_ids_for_booking
+from src.models.rooms import RoomsOrm
 
 
 class BookingsRepository(BaseRepository):
@@ -17,6 +19,19 @@ class BookingsRepository(BaseRepository):
         return [
             self.mapper.map_to_domain_entity(booking) for booking in res.scalars().all()
         ]
+
+    async def add_booking(self, data: BookingAdd):
+        query_hotel_id = select(RoomsOrm.hotel_id).filter_by(id=data.room_id)
+        res_hotel_id = await self.session.execute(query_hotel_id)
+        hotel_id = res_hotel_id.scalars().one()
+        query = rooms_ids_for_booking(
+            date_from=data.date_from, date_to=data.date_to, hotel_id=hotel_id
+        )
+        res = await self.session.execute(query)
+        rooms_ids = res.scalars().all()
+        if data.room_id in rooms_ids:
+            return await self.add(data)
+        raise Exception
 
     # async def add(self, data: BookingAdd) -> Booking:
     #     insert_stmt = (
