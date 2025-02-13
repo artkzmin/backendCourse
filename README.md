@@ -19,7 +19,7 @@ celery -A src.tasks.celery_app:celery_instance beat -l INFO
 ```
 pytest -v
 ```
-Запуск тестирования с поддержкой дебага
+Запуск тестирования с дебагом
 ```
 pytest -v -s
 ```
