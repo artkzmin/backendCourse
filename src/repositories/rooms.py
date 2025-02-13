@@ -1,6 +1,5 @@
 from src.repositories.base import BaseRepository
 from src.models.rooms import RoomsOrm
-from src.schemas.rooms import Room, RoomWithRels
 from src.repositories.utils import rooms_ids_for_booking
 from src.repositories.mappers.mappers import RoomDataMapper, RoomDataWithRealsMapper
 

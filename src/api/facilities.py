@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Body
 from fastapi_cache.decorator import cache
 
-from src.schemas.facilities import Facility, FacilityAdd
+from src.schemas.facilities import FacilityAdd
 from src.api.dependencies import DBDep
 from src.tasks.tasks import test_task
 

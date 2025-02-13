@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Query, Body
 from datetime import date
 from src.api.dependencies import PaginationDep, DBDep
-from src.schemas.rooms import Room, RoomAddRequest, RoomPatchRequest, RoomAdd, RoomPatch
+from src.schemas.rooms import RoomAddRequest, RoomPatchRequest, RoomAdd, RoomPatch
 from src.schemas.base import StatusOK
 from src.schemas.facilities import RoomFacilityAdd
 

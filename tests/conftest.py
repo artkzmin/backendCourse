@@ -1,3 +1,4 @@
+# ruff: noqa: E402 F403
 from dotenv import load_dotenv
 
 load_dotenv(".test.env", override=True)

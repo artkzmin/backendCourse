@@ -7,3 +7,5 @@ static
 celerybeat*.dat
 celerybeat*.dir
 celerybeat*.bak
+.pytest_cache
+.ruff_cache
