@@ -1,19 +1,18 @@
 import pytest
 
 from src.schemas.bookings import Booking
-from src.utils.db_manager import DBManager
-from src.database import async_session_maker_null_pool
+from tests.conftest import get_db_null_pool
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 async def delete_all_bookings():
-    async with DBManager(async_session_maker_null_pool) as db:
-        bookings: list[Booking] = await db.bookings.get_all()
+    async for db_ in get_db_null_pool():
+        bookings: list[Booking] = await db_.bookings.get_all()
         for b in bookings:
-            await db.bookings.delete(id=b.id)
-        await db.commit()
+            await db_.bookings.delete(id=b.id)
+        await db_.commit()
 
-        new_bookings = await db.bookings.get_all()
+        new_bookings = await db_.bookings.get_all()
         print(f"Удаление bookings {new_bookings=}")
         assert not new_bookings
 
