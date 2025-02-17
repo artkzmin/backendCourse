@@ -21,7 +21,7 @@ class ObjectAlreadyExists(BaseException):
 def check_date_to_after_date_from(date_from: date, date_to: date) -> None:
     if date_from >= date_to:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail='Дата заезда не может быть позже даты выезда')
-    
+
 
 class BaseHTTPException(HTTPException):
     status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
