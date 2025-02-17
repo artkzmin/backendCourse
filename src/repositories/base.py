@@ -1,7 +1,10 @@
 from sqlalchemy import select, insert, delete, update
+from sqlalchemy.exc import NoResultFound
 from pydantic import BaseModel
+from typing import Any
 from src.database import BaseOrm
 from src.repositories.mappers.base import DataMapper
+from src.exceptions import ObjectNotFountException
 
 
 class BaseRepository:
@@ -21,12 +24,21 @@ class BaseRepository:
     async def get_all(self, *args, **kwargs):
         return await self.get_filtered()
 
-    async def get_one_or_none(self, **filter_by):
+    async def get_one_or_none(self, **filter_by) -> BaseModel | None | Any:
         query = select(self.model).filter_by(**filter_by)
         result = await self.session.execute(query)
         model = result.scalars().one_or_none()
         if model is None:
             return None
+        return self.mapper.map_to_domain_entity(model)
+
+    async def get_one(self, **filter_by) -> BaseModel:
+        query = select(self.model).filter_by(**filter_by)
+        result = await self.session.execute(query)
+        try:
+            model = result.scalars().one()
+        except NoResultFound:
+            raise ObjectNotFountException
         return self.mapper.map_to_domain_entity(model)
 
     async def add(self, data: BaseModel):

@@ -25,13 +25,12 @@ async def delete_all_bookings():
         (1, "2024-01-01", "2024-02-02", 200),
         (1, "2024-01-01", "2024-02-02", 200),
         (1, "2024-01-01", "2024-02-02", 200),
-        (1, "2024-01-01", "2024-02-02", 400),
+        (1, "2024-01-01", "2024-02-02", 409),
         (1, "2024-03-01", "2024-04-02", 200),
         (1, "2024-03-01", "2024-04-02", 200),
     ],
 )
 async def test_add_booking(room_id, date_from, date_to, status_code, authenticated_ac):
-
     request_json = {"date_from": date_from, "date_to": date_to, "room_id": room_id}
 
     response = await authenticated_ac.post(

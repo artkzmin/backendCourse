@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Query, Body
+from fastapi import APIRouter, Query, Body, HTTPException, status
 from fastapi_cache.decorator import cache
 from datetime import date
 from src.schemas.hotels import HotelPatch, HotelAdd, Hotel
 from src.api.dependencies import PaginationDep, DBDep
 from src.schemas.base import StatusOK
+from src.exceptions import ObjectNotFountException
 
 
 router = APIRouter(prefix="/hotels", tags=["Отели"])
@@ -14,11 +15,13 @@ router = APIRouter(prefix="/hotels", tags=["Отели"])
 async def get_hotels(
     db: DBDep,
     pagination: PaginationDep,
-    date_from: date = Query(examples=["2024-08-01"]),
-    date_to: date = Query(examples=["2024-08-20"]),
+    date_from: date = Query("2024-08-01"),
+    date_to: date = Query("2024-08-20"),
     title: str | None = Query(None, description="Заголовок отеля"),
     location: str | None = Query(None, description="Местоположение отеля"),
 ) -> list[Hotel]:
+    if date_from > date_to:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Дата заезда позже даты выезда')
 
     per_page = pagination.per_page or 5
 
@@ -33,12 +36,15 @@ async def get_hotels(
 
 
 @router.get("/{hotel_id}")
-async def get_hotel(db: DBDep, hotel_id: int) -> Hotel | None:
-    return await db.hotels.get_one_or_none(id=hotel_id)
+async def get_hotel(db: DBDep, hotel_id: int) -> Hotel:
+    try:
+        return await db.hotels.get_one(id=hotel_id)
+    except ObjectNotFountException:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Отель не найден')
 
 
 @router.post("")
-async def create_hotel(
+async def add_hotel(
     db: DBDep,
     hotel_data: HotelAdd = Body(
         openapi_examples={
@@ -85,9 +91,7 @@ async def edit_hotel(db: DBDep, hotel_id: int, hotel_data: HotelAdd) -> StatusOK
     summary="Частичное обновления данных об отеле",
     description="<h1>Подробное описание</h1>",
 )
-async def partially_edit_hotel(
-    db: DBDep, hotel_id: int, hotel_data: HotelPatch
-) -> StatusOK:
+async def partially_edit_hotel(db: DBDep, hotel_id: int, hotel_data: HotelPatch) -> StatusOK:
     await db.hotels.edit(data=hotel_data, exclude_unset=True, id=hotel_id)
     await db.commit()
     return StatusOK

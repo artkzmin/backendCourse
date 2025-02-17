@@ -34,9 +34,7 @@ def resize_image_without_decorator(image_path: str):
         output_path = os.path.join(output_folder, new_file_name)
         # Сохраняем изображение
         img_resized.save(output_path)
-    print(
-        f"Изображение сохранено в следующих размерах: {sizes} в папке {output_folder}"
-    )
+    print(f"Изображение сохранено в следующих размерах: {sizes} в папке {output_folder}")
 
 
 @celery_instance.task

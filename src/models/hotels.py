@@ -4,7 +4,7 @@ from src.database import BaseOrm
 
 
 class HotelsOrm(BaseOrm):
-    __tablename__ = 'hotels'
+    __tablename__ = "hotels"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(String(100))

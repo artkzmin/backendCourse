@@ -6,7 +6,7 @@ import pytest
     [
         ("ivan@ivanov.ru", "password1", 200),
         ("igor@igorev.ru", "password2", 200),
-        ("igor@igorev.ru", "1234", 400),
+        ("igor@igorev.ru", "1234", 409),
         ("bademail", "1234", 422),
     ],
 )

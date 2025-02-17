@@ -1,10 +1,12 @@
 from sqlalchemy import select
 from pydantic import EmailStr
+from sqlalchemy.exc import IntegrityError
 
 from src.repositories.base import BaseRepository
 from src.models.users import UsersOrm
-from src.schemas.users import UserWithHashedPassword
+from src.schemas.users import UserWithHashedPassword, UserAdd, User
 from src.repositories.mappers.mappers import UserDataMapper
+from src.exceptions import UserAlreadyExists
 
 
 class UsersRepository(BaseRepository):
@@ -18,3 +20,9 @@ class UsersRepository(BaseRepository):
         if model is None:
             return None
         return UserWithHashedPassword.model_validate(model)
+    
+    async def add_user(self, data: UserAdd) -> User:
+        try:
+            return await self.add(data)
+        except IntegrityError:
+            raise UserAlreadyExists
