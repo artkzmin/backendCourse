@@ -5,7 +5,7 @@ from src.schemas.users import UserRequestAdd, UserAdd
 from src.services.auth import AuthService
 from src.api.dependencies import UserIdDep, DBDep
 from src.schemas.base import StatusOK
-from src.exceptions import UserAlreadyExists
+from src.exceptions import ObjectAlreadyExists
 
 
 router = APIRouter(prefix="/auth", tags=["Авторизация и аутентификация"])
@@ -15,15 +15,14 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 @router.post("/register")
 async def register_user(db: DBDep, data: UserRequestAdd) -> StatusOK:
+    hashed_password = AuthService().hash_password(data.password)
+    new_user_data = UserAdd(email=data.email, hashed_password=hashed_password)
     try:
-        hashed_password = AuthService().hash_password(data.password)
-        new_user_data = UserAdd(email=data.email, hashed_password=hashed_password)
         await db.users.add_user(new_user_data)
         await db.commit()
-
-        return StatusOK
-    except UserAlreadyExists as ex:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ex.detail)
+    except ObjectAlreadyExists:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Пользователь с такой почтой уже существует')
+    return StatusOK
 
 
 @router.post("/login")
