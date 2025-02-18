@@ -39,7 +39,7 @@ docker network create myNetwork
 docker run --name booking_db \
     -p 6432:5432 \
     -e POSTGRES_USER=abcde \
-    -e POSTGRES_PASSWORD=abcde \
+    -e POSTGRES_PASSWORD=abcdeuinrmv0u3894ut289v30yt978f34hk297t \
     -e POSTGRES_DB=booking
     --network=myNetwork \
     --volume pg-booking-data:/var/lig/postgresql/data \
@@ -47,7 +47,7 @@ docker run --name booking_db \
 ```
 В одну строку:
 ```
-docker run --name booking_db -p 6432:5432 -e POSTGRES_USER=abcde -e POSTGRES_PASSWORD=abcde -e POSTGRES_DB=booking --network=myNetwork --volume pg-booking-data:/var/lig/postgresql/data -d postgres:16
+docker run --name booking_db -p 6432:5432 -e POSTGRES_USER=abcde -e POSTGRES_PASSWORD=abcdeuinrmv0u3894ut289v30yt978f34hk297t -e POSTGRES_DB=booking --network=myNetwork --volume pg-booking-data:/var/lig/postgresql/data -d postgres:16
 ```
 
 ### Запуск Redis
