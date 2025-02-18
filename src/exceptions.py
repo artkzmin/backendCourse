@@ -9,11 +9,11 @@ class BaseException(Exception):
         super().__init__(self.detail, *args, **kwargs)
 
 
-class UserNotRegistered(BaseException):
+class UserNotRegisteredException(BaseException):
     detail = "Пользователь с таким email не зарегистрирован"
 
 
-class IncorrectPassword(BaseException):
+class IncorrectPasswordException(BaseException):
     detail = "Пароль неверный"
 
 
@@ -37,11 +37,11 @@ class AllRoomsAreBooked(BaseException):
     detail = "Не осталось свободных номеров"
 
 
-class ObjectAlreadyExists(BaseException):
+class ObjectAlreadyExistsException(BaseException):
     detail = "Похожий объект уже существует"
 
 
-class UserAlreadyExists(ObjectAlreadyExists):
+class UserAlreadyExistsException(ObjectAlreadyExistsException):
     detail = "Пользователь уже существует"
 
 
@@ -94,3 +94,13 @@ class UserNotRegisteredHTTPException(BaseHTTPException):
 class IncorrectPasswordHTTPException(BaseHTTPException):
     status_code = status.HTTP_401_UNAUTHORIZED
     detail = "Пароль неверный"
+
+
+class NoAccessTokenHTTPException(BaseHTTPException):
+    status_code = status.HTTP_401_UNAUTHORIZED
+    detail = "Не предоставлен токен"
+
+
+class IncorrectTokenHTTPException(BaseHTTPException):
+    status_code = status.HTTP_401_UNAUTHORIZED
+    detail = "Некорректный токен"

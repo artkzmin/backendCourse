@@ -6,13 +6,13 @@ from src.services.auth import AuthService
 from src.api.dependencies import UserIdDep, DBDep
 from src.schemas.base import StatusOK
 from src.exceptions import (
-    UserAlreadyExists,
+    UserAlreadyExistsException,
     UserAlreadyExistsHTTPException,
-    UserNotRegistered,
+    UserNotRegisteredException,
     UserNotRegisteredHTTPException,
     UserNotFoundException,
     UserNotFoundHTTPException,
-    IncorrectPassword,
+    IncorrectPasswordException,
     IncorrectPasswordHTTPException,
 )
 
@@ -26,7 +26,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 async def register_user(db: DBDep, data: UserRequestAdd) -> StatusOK:
     try:
         await AuthService(db).register_user(data)
-    except UserAlreadyExists:
+    except UserAlreadyExistsException:
         raise UserAlreadyExistsHTTPException
     return StatusOK
 
@@ -35,9 +35,9 @@ async def register_user(db: DBDep, data: UserRequestAdd) -> StatusOK:
 async def login_user(db: DBDep, data: UserRequestAdd, response: Response):
     try:
         access_token = await AuthService(db).login_user(data)
-    except UserNotRegistered:
+    except UserNotRegisteredException:
         raise UserNotRegisteredHTTPException
-    except IncorrectPassword:
+    except IncorrectPasswordException:
         raise IncorrectPasswordHTTPException
 
     response.set_cookie("access_token", access_token)

@@ -8,7 +8,7 @@ from src.repositories.base import BaseRepository
 from src.models.users import UsersOrm
 from src.schemas.users import UserWithHashedPassword, UserAdd, User
 from src.repositories.mappers.mappers import UserDataMapper
-from src.exceptions import ObjectAlreadyExists
+from src.exceptions import ObjectAlreadyExistsException
 
 
 class UsersRepository(BaseRepository):
@@ -22,13 +22,13 @@ class UsersRepository(BaseRepository):
         if model is None:
             return None
         return UserWithHashedPassword.model_validate(model)
-    
+
     async def add_user(self, data: UserAdd) -> User:
         try:
             return await self.add(data)
         except IntegrityError as ex:
-            logging.exception(f'Не удалось добавить данные в БД, входные данные={data}')
+            logging.exception(f"Не удалось добавить данные в БД, входные данные={data}")
             if isinstance(ex.orig.__cause__, UniqueViolationError):
-                raise ObjectAlreadyExists from ex
-            logging.exception(f'Незнакомая ошибка, входные данные={data}')
+                raise ObjectAlreadyExistsException from ex
+            logging.exception(f"Незнакомая ошибка, входные данные={data}")
             raise ex

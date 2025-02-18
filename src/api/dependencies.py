@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from src.services.auth import AuthService
 from src.utils.db_manager import DBManager
 from src.database import async_session_maker
+from src.exceptions import UserNotFoundHTTPException, NoAccessTokenHTTPException
 
 
 class PaginationParams(BaseModel):
@@ -23,10 +24,7 @@ PaginationDep = Annotated[PaginationParams, Depends()]
 def get_token(request: Request) -> str:
     token = request.cookies.get("access_token")
     if not token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Вы не предоставили токен доступа",
-        )
+        raise NoAccessTokenHTTPException
     return token
 
 
@@ -34,9 +32,7 @@ def get_current_user_id(token: str = Depends(get_token)) -> int:
     data = AuthService().decode_token(token)
     user_id = data.get("user_id")
     if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Пользователь не найден"
-        )
+        raise UserNotFoundHTTPException
     return user_id
 
 

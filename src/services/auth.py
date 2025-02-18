@@ -7,12 +7,13 @@ from src.config import settings
 from src.services.base import BaseService
 from src.schemas.users import UserRequestAdd, UserAdd, User
 from src.exceptions import (
-    ObjectAlreadyExists,
-    UserAlreadyExists,
-    UserNotRegistered,
-    IncorrectPassword,
+    ObjectAlreadyExistsException,
+    UserAlreadyExistsException,
+    UserNotRegisteredException,
+    IncorrectPasswordException,
     ObjectNotFoundException,
     UserNotFoundException,
+    IncorrectTokenHTTPException,
 )
 
 
@@ -42,9 +43,7 @@ class AuthService(BaseService):
                 token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
             )
         except jwt.exceptions.DecodeError:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Некорректный токен"
-            )
+            raise IncorrectTokenHTTPException
 
     async def register_user(self, data: UserRequestAdd) -> None:
         hashed_password = self.hash_password(data.password)
@@ -52,15 +51,15 @@ class AuthService(BaseService):
         try:
             await self.db.users.add_user(new_user_data)
             await self.db.commit()
-        except ObjectAlreadyExists as ex:
-            raise UserAlreadyExists from ex
+        except ObjectAlreadyExistsException as ex:
+            raise UserAlreadyExistsException from ex
 
     async def login_user(self, data: UserRequestAdd) -> str:
         user = await self.db.users.get_user_with_hashed_password(email=data.email)
         if not user:
-            raise UserNotRegistered
+            raise UserNotRegisteredException
         if not self.verify_password(data.password, user.hashed_password):
-            raise IncorrectPassword
+            raise IncorrectPasswordException
         access_token = self.create_access_token({"user_id": user.id})
         return access_token
 
