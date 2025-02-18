@@ -14,7 +14,6 @@ from contextlib import asynccontextmanager
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 
-
 from src.api.hotels import router as router_hotels
 from src.api.auth import router as router_auth
 from src.api.rooms import router as router_rooms
@@ -24,7 +23,7 @@ from src.api.images import router as router_images
 from src.init import redis_manager
 
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 
 # -------------------------------
@@ -59,7 +58,7 @@ async def lifespan(app: FastAPI):
     # При старте приложения
     await redis_manager.connect()
     FastAPICache.init(RedisBackend(redis_manager.redis), prefix="fastapi-cache")
-    logging.info('FastAPI cache initialized')
+    logging.info("FastAPI cache initialized")
     yield
     # При выключени/перезагрузке приложения
     await redis_manager.close()
@@ -87,4 +86,4 @@ async def custom_swagger_ui_html():
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", reload=True, host="127.0.0.1", port=8000)
+    uvicorn.run("main:app", reload=True, host="0.0.0.0", port=8000)

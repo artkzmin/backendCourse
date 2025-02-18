@@ -14,7 +14,7 @@ class RoomService(BaseService):
     async def get_filtered_by_time(
         self, hotel_id: int, pagination, date_from: date, date_to: date
     ) -> list[Room]:
-        await check_date_to_after_date_from(date_from=date_from, date_to=date_to)
+        check_date_to_after_date_from(date_from=date_from, date_to=date_to)
 
         per_page = pagination.per_page or 5
         rooms = await self.db.rooms.get_filtered_by_time(
