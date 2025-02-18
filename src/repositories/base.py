@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from typing import Any
 from src.database import BaseOrm
 from src.repositories.mappers.base import DataMapper
-from src.exceptions import ObjectNotFountException
+from src.exceptions import ObjectNotFoundException
 
 
 class BaseRepository:
@@ -38,7 +38,7 @@ class BaseRepository:
         try:
             model = result.scalars().one()
         except NoResultFound:
-            raise ObjectNotFountException
+            raise ObjectNotFoundException
         return self.mapper.map_to_domain_entity(model)
 
     async def add(self, data: BaseModel):

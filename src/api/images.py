@@ -1,23 +1,10 @@
-import shutil
 from fastapi import APIRouter, UploadFile, BackgroundTasks
-from src.tasks.tasks import resize_image_without_decorator
+from src.services.images import ImageService
 
 router = APIRouter(prefix="/images", tags=["Изображения отелей"])
-
-
-# Celery-solution
-# @router.post("")
-# def upload_image(file: UploadFile):
-#     image_path = f"src/static/images/{file.filename}"
-#     with open(image_path, "wb+") as new_file:
-#         shutil.copyfileobj(file.file, new_file)
-#     resize_image.delay(image_path)
 
 
 # FastAPI-solution
 @router.post("")
 def upload_image(file: UploadFile, background_tasks: BackgroundTasks):
-    image_path = f"src/static/images/{file.filename}"
-    with open(image_path, "wb+") as new_file:
-        shutil.copyfileobj(file.file, new_file)
-    background_tasks.add_task(resize_image_without_decorator, image_path)
+    ImageService().upload_image(file, background_tasks)

@@ -2,6 +2,7 @@ from sqlalchemy import select
 from pydantic import EmailStr
 from sqlalchemy.exc import IntegrityError
 from asyncpg.exceptions import UniqueViolationError
+import logging
 
 from src.repositories.base import BaseRepository
 from src.models.users import UsersOrm
@@ -26,6 +27,8 @@ class UsersRepository(BaseRepository):
         try:
             return await self.add(data)
         except IntegrityError as ex:
+            logging.exception(f'Не удалось добавить данные в БД, входные данные={data}')
             if isinstance(ex.orig.__cause__, UniqueViolationError):
                 raise ObjectAlreadyExists from ex
+            logging.exception(f'Незнакомая ошибка, входные данные={data}')
             raise ex

@@ -4,9 +4,19 @@ from datetime import datetime, timezone, timedelta
 from fastapi import HTTPException, status
 
 from src.config import settings
+from src.services.base import BaseService
+from src.schemas.users import UserRequestAdd, UserAdd, User
+from src.exceptions import (
+    ObjectAlreadyExists,
+    UserAlreadyExists,
+    UserNotRegistered,
+    IncorrectPassword,
+    ObjectNotFoundException,
+    UserNotFoundException,
+)
 
 
-class AuthService:
+class AuthService(BaseService):
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
     def create_access_token(self, data: dict) -> str:
@@ -28,8 +38,34 @@ class AuthService:
 
     def decode_token(self, token: str) -> dict:
         try:
-            return jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+            return jwt.decode(
+                token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
+            )
         except jwt.exceptions.DecodeError:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Некорректный токен"
             )
+
+    async def register_user(self, data: UserRequestAdd) -> None:
+        hashed_password = self.hash_password(data.password)
+        new_user_data = UserAdd(email=data.email, hashed_password=hashed_password)
+        try:
+            await self.db.users.add_user(new_user_data)
+            await self.db.commit()
+        except ObjectAlreadyExists as ex:
+            raise UserAlreadyExists from ex
+
+    async def login_user(self, data: UserRequestAdd) -> str:
+        user = await self.db.users.get_user_with_hashed_password(email=data.email)
+        if not user:
+            raise UserNotRegistered
+        if not self.verify_password(data.password, user.hashed_password):
+            raise IncorrectPassword
+        access_token = self.create_access_token({"user_id": user.id})
+        return access_token
+
+    async def get_user(self, user_id) -> User:
+        try:
+            return await self.db.users.get_one(id=user_id)
+        except ObjectNotFoundException as ex:
+            raise UserNotFoundException from ex
