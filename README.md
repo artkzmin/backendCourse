@@ -62,6 +62,18 @@ docker run --name booking_cache \
 docker run --name booking_cache -p 7379:6379 --network=myNetwork -d redis:7.4
 ```
 
+### Запуск Nginx
+```
+docker run --name booking_nginx \
+    --volume=./nginx.conf:/etc/nginx/nginx.conf \
+    --network=myNetwork \
+    --rm -p 80:80 nginx
+```
+В одну строку:
+```
+docker run --name booking_nginx --volume=./nginx.conf:/etc/nginx/nginx.conf --network=myNetwork --rm -p 80:80 nginx
+```
+
 ### Сборка Backend
 ```
 docker build -t booking_image .
