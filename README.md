@@ -36,42 +36,44 @@ docker network create myNetwork
 
 ### Запуск БД
 ```
-docker run --name booking_db \
+sudo docker run --name booking_db \
     -p 6432:5432 \
     -e POSTGRES_USER=abcde \
     -e POSTGRES_PASSWORD=abcdeuinrmv0u3894ut289v30yt978f34hk297t \
     -e POSTGRES_DB=booking
     --network=myNetwork \
     --volume pg-booking-data:/var/lig/postgresql/data \
-    -d postgres:16 \
+    -d postgres:16
 ```
 В одну строку:
 ```
-docker run --name booking_db -p 6432:5432 -e POSTGRES_USER=abcde -e POSTGRES_PASSWORD=abcdeuinrmv0u3894ut289v30yt978f34hk297t -e POSTGRES_DB=booking --network=myNetwork --volume pg-booking-data:/var/lig/postgresql/data -d postgres:16
+sudo docker run --name booking_db -p 6432:5432 -e POSTGRES_USER=abcde -e POSTGRES_PASSWORD=abcdeuinrmv0u3894ut289v30yt978f34hk297t -e POSTGRES_DB=booking --network=myNetwork --volume pg-booking-data:/var/lig/postgresql/data -d postgres:16
 ```
 
 ### Запуск Redis
 ```
-docker run --name booking_cache \
+sudo docker run --name booking_cache \
     -p 7379:6379 \
     --network=myNetwork \
     -d redis:7.4
 ```
 В одну строку:
 ```
-docker run --name booking_cache -p 7379:6379 --network=myNetwork -d redis:7.4
+sudo docker run --name booking_cache -p 7379:6379 --network=myNetwork -d redis:7.4
 ```
 
 ### Запуск Nginx
 ```
-docker run --name booking_nginx \
+sudo docker run --name booking_nginx \
     --volume=./nginx.conf:/etc/nginx/nginx.conf \
+    --volume=/etc/letsencrypt:/etc/letsencrypt \
+    --volume=/var/lib/letsencrypt:/var/lib/letsencrypt \
     --network=myNetwork \
-    --rm -p 80:80 nginx
+    --rm -p 443:443 nginx
 ```
 В одну строку:
 ```
-docker run --name booking_nginx --volume=./nginx.conf:/etc/nginx/nginx.conf --network=myNetwork --rm -p 80:80 nginx
+sudo docker run --name booking_nginx --volume=./nginx.conf:/etc/nginx/nginx.conf --volume=/etc/letsencrypt:/etc/letsencrypt --volume=/var/lib/letsencrypt:/var/lib/letsencrypt --network=myNetwork --rm -p 443:443 nginx
 ```
 
 ### Сборка Backend
