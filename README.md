@@ -120,3 +120,29 @@ docker run --name booking_celery_beat \
 ```
 docker run --name booking_celery_beat --network=myNetwork booking_image celery --app=src.tasks.celery_app:celery_instance beat -l INFO
 ```
+
+
+
+
+
+
+# GitLab CI
+
+https://github.com/artemonsh/backend-course/blob/main/docs/gitlab-runner.md
+
+## Запуск раннера
+```
+sudo docker run -d --name gitlab-runner --restart always \
+  --dns 8.8.8.8 --dns 8.8.4.4 \
+  -v /srv/gitlab-runner/config:/etc/gitlab-runner \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  gitlab/gitlab-runner:alpine
+```
+
+## Регистрация раннера
+```
+sudo docker run --rm -it \
+  --dns 8.8.8.8 --dns 8.8.4.4 \
+  -v /srv/gitlab-runner/config:/etc/gitlab-runner \
+  gitlab/gitlab-runner:alpine register
+```
