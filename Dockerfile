@@ -8,6 +8,6 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-COPY .docker.env .env
+COPY .env .env
 
 CMD alembic upgrade head; python src/main.py

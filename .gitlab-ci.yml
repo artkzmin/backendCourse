@@ -4,6 +4,9 @@ stages:          # List of stages for jobs, and their order of execution
 
 build-job:       # This job runs in the build stage, which runs first.
   stage: build
+  before_sctript:
+    - cp ${ENV} .env
+    - cp ${TEST_ENV} .test.env
   script:
     - docker build -t booking-api-image .
 
