@@ -76,8 +76,6 @@ async def edit_hotel(db: DBDep, hotel_id: int, hotel_data: HotelAdd) -> StatusOK
     summary="Частичное обновления данных об отеле",
     description="<h1>Подробное описание</h1>",
 )
-async def partially_edit_hotel(
-    db: DBDep, hotel_id: int, hotel_data: HotelPatch
-) -> StatusOK:
+async def partially_edit_hotel(db: DBDep, hotel_id: int, hotel_data: HotelPatch) -> StatusOK:
     await HotelService(db).partially_edit_hotel(hotel_id, hotel_data)
     return StatusOK

@@ -14,12 +14,8 @@ class BookingService(BaseService):
     async def add_booking(self, user_id, booking_data: BookingAddRequest) -> Booking:
         room = await RoomService(self.db).get_room_with_check(booking_data.room_id)
 
-        _booking_data = BookingAdd(
-            user_id=user_id, price=room.price, **booking_data.model_dump()
-        )
+        _booking_data = BookingAdd(user_id=user_id, price=room.price, **booking_data.model_dump())
         hotel: Hotel = await self.db.hotels.get_one(id=room.hotel_id)
-        booking_data = await self.db.bookings.add_booking(
-            data=_booking_data, hotel_id=hotel.id
-        )
+        booking_data = await self.db.bookings.add_booking(data=_booking_data, hotel_id=hotel.id)
         await self.db.commit()
         return booking_data

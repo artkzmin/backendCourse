@@ -87,9 +87,7 @@ async def delete_room(db: DBDep, hotel_id: int, room_id: int) -> StatusOK:
 
 
 @router.put("/{hotel_id}/rooms/{room_id}")
-async def edit_room(
-    db: DBDep, hotel_id: int, room_id: int, room_data: RoomAddRequest
-) -> StatusOK:
+async def edit_room(db: DBDep, hotel_id: int, room_id: int, room_data: RoomAddRequest) -> StatusOK:
     try:
         await RoomService(db).edit_room(hotel_id, room_id, room_data)
     except HotelNotFoundException:

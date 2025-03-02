@@ -16,7 +16,7 @@ def test_task():
 
 
 def resize_image_without_decorator(image_path: str):
-    logging.debug(f'Вызывается функция с image_path={image_path}')
+    logging.debug(f"Вызывается функция с image_path={image_path}")
     sizes = [1000, 500, 200]
     output_folder = "src/static/images"
     # Открываем изображение
@@ -37,7 +37,6 @@ def resize_image_without_decorator(image_path: str):
         # Сохраняем изображение
         img_resized.save(output_path)
     logging.info(f"Изображение сохранено в следующих размерах: {sizes} в папке {output_folder}")
-
 
 
 @celery_instance.task

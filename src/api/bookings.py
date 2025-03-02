@@ -24,9 +24,7 @@ async def get_me_bookings(db: DBDep, user_id: UserIdDep) -> list[Booking]:
 
 
 @router.post("")
-async def add_booking(
-    user_id: UserIdDep, db: DBDep, booking_data: BookingAddRequest = Body()
-):
+async def add_booking(user_id: UserIdDep, db: DBDep, booking_data: BookingAddRequest = Body()):
     try:
         booking_data = await BookingService(db).add_booking(
             user_id=user_id, booking_data=booking_data

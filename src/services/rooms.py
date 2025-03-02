@@ -52,15 +52,11 @@ class RoomService(BaseService):
         await self.db.rooms.delete(id=room_id, hotel_id=hotel_id)
         await self.db.commit()
 
-    async def edit_room(
-        self, hotel_id: int, room_id: int, room_data: RoomAddRequest
-    ) -> None:
+    async def edit_room(self, hotel_id: int, room_id: int, room_data: RoomAddRequest) -> None:
         await HotelService(self.db).get_hotel_with_check(hotel_id)
         await self.get_room_with_check(room_id)
 
-        _room_data = RoomAdd(
-            hotel_id=hotel_id, room_id=room_id, **room_data.model_dump()
-        )
+        _room_data = RoomAdd(hotel_id=hotel_id, room_id=room_id, **room_data.model_dump())
         await self.db.rooms.edit(data=_room_data, id=room_id, hotel_id=hotel_id)
         await self.db.rooms_facilities.set_room_facilities(
             room_id=room_id, facilities_ids=room_data.facilities_ids
@@ -74,9 +70,7 @@ class RoomService(BaseService):
         await self.get_room_with_check(room_id)
         _room_data_dict = room_data.model_dump(exclude_unset=True)
         _room_data = RoomPatch(hotel_id=hotel_id, id=room_id, **_room_data_dict)
-        await self.db.rooms.edit(
-            data=_room_data, exclude_unset=True, id=room_id, hotel_id=hotel_id
-        )
+        await self.db.rooms.edit(data=_room_data, exclude_unset=True, id=room_id, hotel_id=hotel_id)
 
         if "facilities_ids" in _room_data_dict:
             await self.db.rooms_facilities.set_room_facilities(
