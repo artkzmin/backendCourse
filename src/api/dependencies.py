@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends, Query, Request, HTTPException, status
+from fastapi import Depends, Query, Request
 from pydantic import BaseModel
 
 
